@@ -1,0 +1,16 @@
+{
+  "name": "@p1223/shared",
+  "version": "0.0.1",
+  "license": "MIT",
+  "module": "true",
+  "packageManager": "yarn@4.3.1",
+  "dependencies": {
+    "typescript": "5.5.3",
+    "zod": "3.23.8"
+  },
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  }
+}
