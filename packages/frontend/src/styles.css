@@ -2,3 +2,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .input {
+    @apply shadow appearance-none border border-brand rounded-sm
+     text-xs w-full py-2 px-3 max-w-20 text-gray-700 leading-tight;
+  }
+  .input:focus {
+    @apply outline-none ring;
+  }
+
+  .button {
+@apply bg-brand uppercase p-2 px-4 rounded-sm text-sm font-bold text-white;
+  }
+}

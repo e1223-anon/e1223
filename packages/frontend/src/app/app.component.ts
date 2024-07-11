@@ -1,12 +1,5 @@
-import { HttpClient } from "@angular/common/http";
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal,
-} from "@angular/core";
+import { ChangeDetectionStrategy, Component, signal } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
-import { HelloWorld } from "@p1223/shared";
 
 @Component({
   selector: "app-root",
@@ -17,11 +10,4 @@ import { HelloWorld } from "@p1223/shared";
 })
 export class AppComponent {
   title = signal("frontend");
-  http = inject(HttpClient);
-
-  ngOnInit() {
-    this.http
-      .get<HelloWorld>("/api")
-      .subscribe((r) => this.title.update(() => r.msg));
-  }
 }

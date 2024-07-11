@@ -1,0 +1,59 @@
+<div class="flex flex-col min-w-96">
+  <div class="flex justify-between items-end mb-14">
+    <div>
+      <label
+        class="block uppercase text-brand text-2xs font-bold mb-2"
+        for="bias"
+      >
+        character
+      </label>
+      <input
+        class="input"
+        type="text"
+        maxlength="1"
+        id="bias"
+        placeholder="Character"
+        [(ngModel)]="bias"
+      />
+    </div>
+    <div>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="0.8"
+        stroke="currentColor"
+        class="size-12 text-brand"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+        />
+      </svg>
+    </div>
+    <div>
+      <button class="button" (click)="generate()">generate 2d grid</button>
+    </div>
+  </div>
+  <table
+    class="flex-grow table table-fixed border border-collapse border-black mb-10"
+  >
+    <tbody>
+      @for (row of tableData(); track $index) {
+      <tr>
+        @for (col of row; track $index) {
+        <td
+          class="border border-black p-4 text-center uppercase font-bold text-brand min-w-20"
+        >
+          {{ col }}
+        </td>
+        }
+      </tr>
+      }
+    </tbody>
+  </table>
+  <div>
+    <app-code></app-code>
+  </div>
+</div>
