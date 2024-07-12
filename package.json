@@ -9,6 +9,7 @@
   ],
   "dependencies": {
     "@nestjs/cli": "10.4.2",
+    "@nestjs/schematics": "10.1.2",
     "typescript": "5.5.3"
   },
   "devDependencies": {
