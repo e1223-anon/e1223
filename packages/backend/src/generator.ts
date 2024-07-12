@@ -1,19 +1,21 @@
-export interface Grid {
-  rows: number;
-  cols: number;
-  value: string;
-}
+import { generatorPutSchema } from "@p1223/shared";
+import { Router } from "express";
+import { generatorStore } from "./generator-store";
 
-export class Generator {
-  async setBias(char: string) {}
+export const router = Router();
 
-  async getValue(): Promise<Grid> {
-    return {
-      rows: 10,
-      cols: 10,
-      value: "a".repeat(100),
-    };
+router.put("/default", async (req, res) => {
+  const { bias } = generatorPutSchema.parse(req.body);
+  req.log.info("Setting generator bias", { bias });
+  const grid = await generatorStore.setConfig("default", bias);
+  res.send({ grid });
+});
+
+router.get("/default", async (req, res) => {
+  req.log.info("Get default bias");
+  const grid = await generatorStore.get("default");
+  if (!grid) {
+    return res.status(404).send({ error: "Not found" });
   }
-}
-
-export const generator: Generator = new Generator();
+  res.send(grid);
+});
