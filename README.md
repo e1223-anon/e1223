@@ -54,8 +54,16 @@ In a larger project it's useful to have some sort of component library but for s
 
 ### Backend
 
-I'm using "vanilla" ExpressJS as I'm excited to see if the [new push](https://github.com/expressjs/discussions/issues/160) and steering committee will be able to get the project moving again!
-I would have liked to use Express 5, but I was unable to find any types for it.
+I started out using "vanilla" ExpressJS, but switched to NestJS because of the missing type safety.
+
+Using another framework makes the project quite a lot more complex but NestJS is modelled to be similar to Angular.
+
+### explicit types hack in tsconfig.json
+
+I ran into an issue with jasmine type includes in the tests from the frontend, so I explicitly defined node and jest.
+
+With a bit more work I think it could be fixed in a better way, the main drawback now is that the jest types are defined
+even in non-test code.
 
 ### Shared
 
