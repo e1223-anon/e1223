@@ -3,6 +3,7 @@ import { computed, inject, Injectable, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { GeneratorPutReturn, GeneratorStateDao } from "@p1223/shared";
 import { catchError, EMPTY, startWith, Subject, switchMap, timer } from "rxjs";
+import { EventsService } from "./events.service";
 
 const generatorId = "default";
 const endpointUrl = "/api/generator/" + generatorId;
@@ -27,6 +28,7 @@ const defaultState: State = {
 })
 export class GeneratorService {
   private http = inject(HttpClient);
+  private events = inject(EventsService);
 
   private state = signal<State>(defaultState);
   private reloadAgainAfter = new Subject<number>();
