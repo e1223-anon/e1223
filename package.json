@@ -1,7 +1,6 @@
 {
   "version": "0.0.1",
   "license": "ISC",
-  "module": "true",
   "name": "@p1223/test2",
   "packageManager": "yarn@4.3.1",
   "workspaces": [
