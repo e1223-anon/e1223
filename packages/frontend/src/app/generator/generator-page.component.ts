@@ -24,9 +24,11 @@ export class GeneratorPageComponent {
 
   tableData = computed(() => {
     const grid = this.generatorService.grid();
-    const data = new Array<string[]>(grid.rows);
-    for (let i = 0; i < grid.rows; i++) {
-      data[i] = grid.data.slice(i * grid.cols, (i + 1) * grid.cols);
+    const rows = 10;
+    const cols = 10;
+    const data = new Array<string[]>(rows);
+    for (let i = 0; i < rows; i++) {
+      data[i] = grid.slice(i * cols, (i + 1) * cols).split("");
     }
     return data;
   });

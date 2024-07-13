@@ -1,21 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { Grid } from '@p1223/shared';
+import { GeneratorStateDao } from '@p1223/shared';
+import { generateCode, generateGrid } from './algorithm';
 
+interface State {
+  dao: GeneratorStateDao;
+}
 @Injectable()
 export class GeneratorService {
-  private generators = new Map<string, Grid>();
+  private generators = new Map<string, State>();
 
-  async setConfig(genId: string, char: string | undefined): Promise<Grid> {
+  async setConfig(
+    genId: string,
+    bias: string | undefined,
+  ): Promise<GeneratorStateDao> {
+    const grid = generateGrid(bias);
+    const code = generateCode(grid, new Date().getSeconds());
     const generator = {
-      rows: 10,
-      cols: 10,
-      data: (char || 'x').repeat(100),
+      dao: {
+        grid: grid,
+        code,
+      },
     };
     this.generators.set(genId, generator);
-    return generator;
+    return { grid, code };
   }
 
-  async get(genId: string): Promise<Grid | undefined> {
-    return this.generators.get(genId);
+  async get(genId: string): Promise<GeneratorStateDao | undefined> {
+    return this.generators.get(genId)?.dao;
   }
 }

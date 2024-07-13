@@ -1,43 +1,49 @@
 import { HttpClient } from "@angular/common/http";
 import { computed, inject, Injectable, signal } from "@angular/core";
-import { GeneratorGet, GeneratorPutReturn, Grid } from "@p1223/shared";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { GeneratorPutReturn, GeneratorStateDao } from "@p1223/shared";
+import { catchError, of, startWith, Subject, switchMap } from "rxjs";
 
 const generatorId = "default";
 const endpointUrl = "/api/generator/" + generatorId;
 
 interface State {
-  grid: Grid;
-  code: string;
+  runState: "not-started" | "running";
+  dao: GeneratorStateDao;
 }
+
+const defaultState: State = {
+  runState: "not-started",
+  dao: {
+    grid: " ".repeat(100),
+    code: "--",
+  },
+};
 
 @Injectable({
   providedIn: "root",
 })
 export class GeneratorService {
-  private state = signal<State>({
-    grid: {
-      data: "a".repeat(100),
-      cols: 10,
-      rows: 10,
-    },
-    code: "42",
-  });
+  private state = signal<State>(defaultState);
   private http = inject(HttpClient);
 
-  grid = computed(() => {
-    const g = this.state().grid;
-    return {
-      ...g,
-      data: g.data.split(""),
-    };
-  });
+  grid = computed(() => this.state().dao.grid);
 
-  code = computed(() => this.state().code);
+  runState = computed(() => this.state().runState);
+  code = computed(() => this.state().dao.code);
 
+  private triggerReload = new Subject<void>();
   constructor() {
-    this.http.get<GeneratorGet>(endpointUrl).subscribe((r) => {
-      this.state.set(r);
-    });
+    this.triggerReload
+      .pipe(
+        startWith(undefined),
+        switchMap(() => this.http.get<GeneratorStateDao>(endpointUrl)),
+        catchError(() => of(defaultState.dao)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((dao) => {
+        this.state.set({ dao, runState: "running" });
+      });
   }
 
   async generate(bias: string | undefined) {
@@ -48,8 +54,8 @@ export class GeneratorService {
     this.http
       .put<GeneratorPutReturn>(endpointUrl, { bias })
       .pipe()
-      .subscribe((r) => {
-        this.state.set(r);
+      .subscribe((dao) => {
+        this.state.set({ dao, runState: "running" });
       });
   }
 }

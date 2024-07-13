@@ -54,6 +54,7 @@ function charCount(grid: string, char: string): number {
 }
 
 function divideUntilSingleDigit(charACount: number): number {
+  // todo: divisor = Math.floor(charACount / 9)
   let divisor = 2;
   let result = charACount;
   while (result >= 10) {
