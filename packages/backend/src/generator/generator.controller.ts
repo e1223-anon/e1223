@@ -1,4 +1,11 @@
-import { Body, Controller, Get, HttpException, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Put,
+} from '@nestjs/common';
 import { GeneratorPut, GeneratorStateDao } from '@p1223/shared';
 import { GeneratorService } from './generator.service';
 
@@ -8,11 +15,14 @@ export class GeneratorController {
 
   @Put('/default')
   async putGenerator(@Body() config: GeneratorPut): Promise<GeneratorStateDao> {
-    const genDao = await this.generatorService.setConfig(
+    const configResult = await this.generatorService.setConfig(
       'default',
       config.bias,
     );
-    return genDao;
+    if (configResult.result === 'error') {
+      throw new HttpException('Config throttle', HttpStatus.FORBIDDEN);
+    }
+    return configResult.dao;
   }
 
   @Get('/default')

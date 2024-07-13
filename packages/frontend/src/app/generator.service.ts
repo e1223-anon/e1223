@@ -2,7 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { computed, inject, Injectable, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { GeneratorPutReturn, GeneratorStateDao } from "@p1223/shared";
-import { catchError, of, startWith, Subject, switchMap } from "rxjs";
+import { catchError, EMPTY, startWith, Subject, switchMap, timer } from "rxjs";
 
 const generatorId = "default";
 const endpointUrl = "/api/generator/" + generatorId;
@@ -15,6 +15,8 @@ interface State {
 const defaultState: State = {
   runState: "not-started",
   dao: {
+    configAllowedInMs: 0,
+    expiresInMs: 0,
     grid: " ".repeat(100),
     code: "--",
   },
@@ -24,25 +26,30 @@ const defaultState: State = {
   providedIn: "root",
 })
 export class GeneratorService {
-  private state = signal<State>(defaultState);
   private http = inject(HttpClient);
 
-  grid = computed(() => this.state().dao.grid);
+  private state = signal<State>(defaultState);
+  private reloadAgainAfter = new Subject<number>();
 
+  grid = computed(() => this.state().dao.grid);
   runState = computed(() => this.state().runState);
   code = computed(() => this.state().dao.code);
+  configThrottled = computed(() => this.state().dao.configAllowedInMs > 0);
 
-  private triggerReload = new Subject<void>();
   constructor() {
-    this.triggerReload
+    this.reloadAgainAfter
       .pipe(
-        startWith(undefined),
-        switchMap(() => this.http.get<GeneratorStateDao>(endpointUrl)),
-        catchError(() => of(defaultState.dao)),
+        startWith(0),
+        switchMap((delay) => timer(delay)),
+        switchMap(() =>
+          this.http
+            .get<GeneratorStateDao>(endpointUrl)
+            .pipe(catchError(() => EMPTY)),
+        ),
         takeUntilDestroyed(),
       )
       .subscribe((dao) => {
-        this.state.set({ dao, runState: "running" });
+        this.applyState(dao);
       });
   }
 
@@ -55,7 +62,12 @@ export class GeneratorService {
       .put<GeneratorPutReturn>(endpointUrl, { bias })
       .pipe()
       .subscribe((dao) => {
-        this.state.set({ dao, runState: "running" });
+        this.applyState(dao);
       });
+  }
+
+  private applyState(dao: GeneratorStateDao) {
+    this.reloadAgainAfter.next(dao.expiresInMs);
+    this.state.set({ dao, runState: "running" });
   }
 }

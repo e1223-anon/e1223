@@ -22,6 +22,8 @@ export class GeneratorPageComponent {
 
   bias = model<string | undefined>(undefined);
 
+  configThrottled = this.generatorService.configThrottled;
+
   tableData = computed(() => {
     const grid = this.generatorService.grid();
     const rows = 10;

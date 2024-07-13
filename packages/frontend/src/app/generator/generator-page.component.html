@@ -33,26 +33,26 @@
       </svg>
     </div>
     <div>
-      <button class="button" (click)="generate()">generate 2d grid</button>
+      <button
+        class="button"
+        (click)="generate()"
+        [disabled]="configThrottled()"
+      >
+        generate 2d grid
+      </button>
     </div>
   </div>
-  <table
-    class="flex-grow table table-fixed border border-collapse border-black mb-10"
-  >
-    <tbody>
-      @for (row of tableData(); track $index) {
-      <tr>
-        @for (col of row; track $index) {
-        <td
-          class="border border-black p-4 text-center uppercase font-bold text-brand min-w-20"
+  <div class="grid grid-cols-10 gap-[1px] mb-10 uppercase font-bold text-brand">
+    @for (row of tableData(); track $index) {
+      @for (col of row; track $index) {
+        <div
+          class="outline outline-brand outline-[1px] h-12 w-20 flex items-center justify-center"
         >
           {{ col }}
-        </td>
-        }
-      </tr>
+        </div>
       }
-    </tbody>
-  </table>
+    }
+  </div>
   <div>
     <app-code></app-code>
   </div>

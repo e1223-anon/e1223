@@ -3,6 +3,8 @@ import { z } from "zod";
 export const generatorStateDaoSchema = z.object({
   grid: z.string().length(100).regex(/[a-z]/),
   code: z.string().length(2),
+  configAllowedInMs: z.number().int(),
+  expiresInMs: z.number().int(),
 });
 
 export type GeneratorStateDao = z.infer<typeof generatorStateDaoSchema>;

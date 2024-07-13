@@ -13,6 +13,10 @@
   }
 
   .button {
-@apply bg-brand uppercase p-2 px-4 rounded-sm text-sm font-bold text-white;
+    @apply bg-brand uppercase p-2 px-4 rounded-sm text-sm font-bold text-white;
+  }
+
+  .button:disabled {
+    @apply bg-red-300;
   }
 }
