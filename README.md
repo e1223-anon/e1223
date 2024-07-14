@@ -1,5 +1,21 @@
 # Exercise 1223
 
+> [!NOTE]
+> There are no pull requests because I had been using my other account's email in my commits which I don't want to do. Of course, modifying the commit changes the SHA, so the PRs got all messed up. Sorry...
+
+Demo running at [https://frontend-3gybwadubq-uc.a.run.app/](https://frontend-3gybwadubq-uc.a.run.app/)
+
+I spent quite a bit of time trying to set up a minimal repository and trying out new tools.
+
+Some things I'm happy with, others not so much.
+
+The main new things for me have been NestJS, SocketIO and GCP.
+
+The clock is just a placeholder, ran out of time.
+
+The grid/code algorithm is located in `packages/backend/src/generator/algorithm.ts`, there are a few
+unit tests too.
+
 ## Repository set up
 
 This is a monorepo using `yarn` workspaces.
@@ -20,6 +36,8 @@ Run `yarn` to install dependencies
 ### Bonus 1: Real-Time Data Synchronization
 
 I implemented this before the payments list because it seemed more interesting, and they had the same number!
+
+I decided to use Socket.IO because it seems really handy and I'm very happy with the tiny wrapper for Socket.IO on the client. I like the way it multiplexes connections to various namespaces, removing the need to have a global "events" service that the various consumers/producers interact with.
 
 Authentication not implemented yet.
 
@@ -78,6 +96,8 @@ In a larger project it's useful to have some sort of component library but for s
 I started out using "vanilla" ExpressJS, but switched to NestJS because of the missing type safety.
 
 Using another framework makes the project quite a lot more complex but NestJS is modelled to be similar to Angular.
+
+I'm aware the requests are not being validated...
 
 ### explicit types hack in tsconfig.json
 
