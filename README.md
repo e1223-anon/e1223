@@ -17,6 +17,12 @@ Run `yarn` to install dependencies
 > [!TIP]
 > See [yarn installation](https://yarnpkg.com/getting-started/install) for instructions on how to install `yarn`.
 
+### Bonus 1: Real-Time Data Synchronization
+
+I implemented this before the payments list because it seemed more interesting, and they had the same number!
+
+Authentication not implemented yet.
+
 ## Tech Stack
 
 ### TypeScript

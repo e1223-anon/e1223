@@ -1,17 +1,54 @@
 import { Injectable } from '@nestjs/common';
 import { GeneratorStateDao } from '@p1223/shared';
+import {
+  BehaviorSubject,
+  firstValueFrom,
+  map,
+  Observable,
+  ReplaySubject,
+  shareReplay,
+  Subject,
+  Subscription,
+  switchMap,
+  timer,
+} from 'rxjs';
 import { generateCode, generateGrid } from './algorithm';
+import { GeneratorEventsGateway } from './generator-events.gateway';
 
-interface State {
-  bias?: string;
-  configLockedUntil: number;
-  expiresAtMs: number;
+const configThrottleMs = 4 * 1000;
+const expiryIntervalMs = 2 * 1000;
+
+interface GeneratorValue {
   grid: string;
   code: string;
+  configuredTimestamp: number;
+  generatedTimestamp: number;
 }
+interface State {
+  configSubject: Subject<{
+    bias: string | undefined;
+  }>;
+  value: Observable<GeneratorValue>;
+  eventsSubscription: Subscription;
+}
+
 @Injectable()
 export class GeneratorService {
   private generators = new Map<string, State>();
+  private generatorSubject = new ReplaySubject<GeneratorStateDao>(1);
+
+  changes = this.generatorSubject.asObservable();
+
+  constructor(private eventGateway: GeneratorEventsGateway) {}
+
+  async get(genId: string): Promise<GeneratorStateDao | undefined> {
+    const state = this.generators.get(genId);
+    if (!state) {
+      return undefined;
+    }
+
+    return this.convertToDao(await firstValueFrom(state.value));
+  }
 
   async setConfig(
     genId: string,
@@ -20,62 +57,74 @@ export class GeneratorService {
     | { result: 'ok'; dao: GeneratorStateDao }
     | { result: 'error'; reason: 'config-throttle' }
   > {
-    const existing = this.generators.get(genId);
-    const now = Date.now();
+    let generator = this.generators.get(genId);
+    if (generator) {
+      const value = await firstValueFrom(generator.value);
 
-    if (existing && existing.configLockedUntil > now) {
-      return { result: 'error', reason: 'config-throttle' };
+      if (value.configuredTimestamp + configThrottleMs > Date.now()) {
+        return { result: 'error', reason: 'config-throttle' };
+      }
+
+      generator.configSubject.next({ bias });
+    } else {
+      generator = this.createGenerator(genId, bias);
     }
-    const grid = generateGrid(bias);
-    const code = generateCode(grid, new Date().getSeconds());
-    const state = this.generate({ bias });
 
-    this.generators.set(genId, state);
     return {
       result: 'ok',
-      dao: {
-        grid,
-        code,
-        expiresInMs: remainingTime(now, state.expiresAtMs),
-        configAllowedInMs: remainingTime(now, state.configLockedUntil),
-      },
+      dao: this.convertToDao(await firstValueFrom(generator.value)),
     };
   }
 
-  async get(genId: string): Promise<GeneratorStateDao | undefined> {
-    let state = this.generators.get(genId);
-    if (!state) {
-      return undefined;
-    }
-    const expires = remainingTime(Date.now(), state.expiresAtMs);
-    if (expires === 0) {
-      state = this.generate(state);
-      this.generators.set(genId, state);
-    }
+  private createGenerator(genId: string, bias: string | undefined): State {
+    const configSubject = new BehaviorSubject({
+      bias,
+    });
 
-    return this.exportState(state);
+    const value = configSubject.pipe(
+      map((config) => ({
+        ...config,
+        configuredTimestamp: Date.now(),
+      })),
+      switchMap((c) => timer(0, expiryIntervalMs).pipe(map(() => c))),
+      map((config) => {
+        const grid = generateGrid(config.bias);
+        const code = generateCode(grid, new Date().getSeconds());
+        return {
+          grid,
+          code,
+          configuredTimestamp: config.configuredTimestamp,
+          generatedTimestamp: Date.now(),
+        };
+      }),
+      shareReplay(1),
+    );
+
+    const generator: State = {
+      configSubject,
+      value,
+      eventsSubscription: value.subscribe((v) => {
+        this.eventGateway.emit(genId, this.convertToDao(v));
+      }),
+    };
+
+    this.generators.set(genId, generator);
+    return generator;
   }
 
-  private generate(state?: Partial<State>): State {
+  private convertToDao(generatorValue: GeneratorValue): GeneratorStateDao {
     const now = Date.now();
-    const grid = generateGrid(state?.bias);
-    const code = generateCode(grid, new Date().getSeconds());
-
     return {
-      expiresAtMs: now + 1000 * 2,
-      configLockedUntil: state?.configLockedUntil || now + 1000 * 4,
-      bias: state?.bias,
-      grid,
-      code,
-    };
-  }
-
-  private exportState(state: State): GeneratorStateDao {
-    return {
-      grid: state.grid,
-      code: state.code,
-      configAllowedInMs: remainingTime(Date.now(), state.configLockedUntil),
-      expiresInMs: remainingTime(Date.now(), state.expiresAtMs),
+      code: generatorValue.code,
+      grid: generatorValue.grid,
+      configAllowedInMs: remainingTime(
+        now,
+        generatorValue.configuredTimestamp + configThrottleMs,
+      ),
+      expiresInMs: remainingTime(
+        now,
+        generatorValue.generatedTimestamp + expiryIntervalMs,
+      ),
     };
   }
 }

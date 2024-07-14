@@ -1,5 +1,18 @@
 <div class="flex flex-col items-center gap-4">
-  <div class="font-bold uppercase">live</div>
+  <div
+    style="visibility: {{ live() ? 'visible' : 'hidden' }}"
+    class="font-bold uppercase flex items-center gap-1"
+  >
+    <svg
+      height="12"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+      class="inline-block"
+    >
+      <circle r="6" cx="6" cy="6" fill="red" />
+    </svg>
+    live
+  </div>
   <div class="py-4 min-w-64 border border-black rounded uppercase text-center">
     your code: <span class="font-bold">{{ code() }}</span>
   </div>

@@ -1,9 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { computed, inject, Injectable, signal } from "@angular/core";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { GeneratorPutReturn, GeneratorStateDao } from "@p1223/shared";
-import { catchError, EMPTY, startWith, Subject, switchMap, timer } from "rxjs";
-import { EventsService } from "./events.service";
+import { createEventsSocket } from "./events-socket";
 
 const generatorId = "default";
 const endpointUrl = "/api/generator/" + generatorId;
@@ -28,31 +26,24 @@ const defaultState: State = {
 })
 export class GeneratorService {
   private http = inject(HttpClient);
-  private events = inject(EventsService);
+  private events = createEventsSocket<GeneratorStateDao>("generator-events");
 
   private state = signal<State>(defaultState);
-  private reloadAgainAfter = new Subject<number>();
 
   grid = computed(() => this.state().dao.grid);
   runState = computed(() => this.state().runState);
   code = computed(() => this.state().dao.code);
+  live = computed(() => this.events.connected());
   configThrottled = computed(() => this.state().dao.configAllowedInMs > 0);
 
   constructor() {
-    this.reloadAgainAfter
-      .pipe(
-        startWith(0),
-        switchMap((delay) => timer(delay)),
-        switchMap(() =>
-          this.http
-            .get<GeneratorStateDao>(endpointUrl)
-            .pipe(catchError(() => EMPTY)),
-        ),
-        takeUntilDestroyed(),
-      )
-      .subscribe((dao) => {
-        this.applyState(dao);
-      });
+    this.http.get<GeneratorStateDao>(endpointUrl).subscribe((dao) => {
+      this.applyState(dao);
+    });
+
+    this.events.eventStream.subscribe(({ data }) => {
+      this.applyState(data);
+    });
   }
 
   async generate(bias: string | undefined) {
@@ -69,7 +60,6 @@ export class GeneratorService {
   }
 
   private applyState(dao: GeneratorStateDao) {
-    this.reloadAgainAfter.next(dao.expiresInMs);
     this.state.set({ dao, runState: "running" });
   }
 }

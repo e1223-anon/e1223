@@ -11,4 +11,5 @@ import { GeneratorService } from "../generator.service";
 export class CodeComponent {
   generatorService = inject(GeneratorService);
   code = this.generatorService.code;
+  live = this.generatorService.live;
 }
