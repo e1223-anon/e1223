@@ -1,10 +1,10 @@
 import { HttpClient } from "@angular/common/http";
 import { computed, inject, Injectable, signal } from "@angular/core";
 import { GeneratorPutReturn, GeneratorStateDao } from "@p1223/shared";
+import { environment } from "../environments/environment";
 import { createEventsSocket } from "./events-socket";
 
-const generatorId = "default";
-const endpointUrl = "/api/generator/" + generatorId;
+const endpointUrl = `${environment.backendUrl}/api/generator/default`;
 
 interface State {
   runState: "not-started" | "running";

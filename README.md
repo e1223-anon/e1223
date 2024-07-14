@@ -23,6 +23,21 @@ I implemented this before the payments list because it seemed more interesting, 
 
 Authentication not implemented yet.
 
+### Bonus 2: Ops
+
+I wanted to try deploying to Google Cloud Run (I've mostly used AWS).
+
+It's using the `cloudbuild.yml` and `Dockerfile` to build 2 images (backend/frontend) and deploys them to artifact registry.
+There's a hook in github to trigger the build and re-deploy the services.
+
+It's not close to ready for production use, but at least the frontend/backend are running.
+
+I've not looked into caching or anything else yet.
+
+I assumed there would be a service similar to AWS CloudFront that would aggregate them on the same domain for me, but if there is, I couldn't find it.
+
+As a temporary solution I hardcoded the URLs in the frontend/backend.
+
 ## Tech Stack
 
 ### TypeScript

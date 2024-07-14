@@ -1,14 +1,12 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 steps:
-  - name: "node"
-    entrypoint: "bash"
-    args: ["-c", "corepack enable && yarn install"]
-  - name: "node"
-    entrypoint: "bash"
-    dir: "packages/backend"
-    args: ["-c", "corepack enable && yarn build"]
   - name: "gcr.io/cloud-builders/docker"
-    dir: "packages/backend"
-    args: ["build", "-t", "us-central1-docker.pkg.dev/e1223-429417/cloud-run-source-deploy/backend", "."]
+    args: ["build", "-t", "us-central1-docker.pkg.dev/e1223-429417/cloud-run-source-deploy/backend", "--target", "backend", "."]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "us-central1-docker.pkg.dev/e1223-429417/cloud-run-source-deploy/frontend", "--target", "frontend", "."]
 images:
   - "us-central1-docker.pkg.dev/e1223-429417/cloud-run-source-deploy/backend"
+  - "us-central1-docker.pkg.dev/e1223-429417/cloud-run-source-deploy/frontend"
 
